@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #qr-reader {
+            margin: 0 auto;
+            width: 300px;
+        }
+        .status {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>QR Code Scanner</h1>
+    <div id="qr-reader"></div>
+    <div class="status">
+        <p id="scan-status">Scanning...</p>
+    </div>
+    <script>
+        const qrReader = new Html5Qrcode("qr-reader");
+
+        function fetchLocation(callback) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const { latitude, longitude } = position.coords;
+                    callback(`Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`);
+                }, () => {
+                    callback("Location not available");
+                });
+            } else {
+                callback("Geolocation not supported");
+            }
+        }
+
+        function onScanSuccess(decodedText) {
+            try {
+                const qrData = JSON.parse(decodedText); // Ensure QR code contains valid JSON
+
+                fetchLocation((location) => {
+                    const timestamp = new Date().toISOString();
+                    qrData.last_scan_time = timestamp;
+                    qrData.last_scan_location = location;
+
+                    // Send QR data to Rails backend
+                    fetch('/users/update_from_qr', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ qr_data: qrData })
+                    }).then(response => response.json())
+                      .then(data => {
+                          if (data.success) {
+                              document.getElementById("scan-status").innerText = "Scan successful! User data updated.";
+                          } else {
+                              document.getElementById("scan-status").innerText = `Error: ${data.message}`;
+                          }
+                      }).catch(error => {
+                          document.getElementById("scan-status").innerText = `Error: ${error.message}`;
+                      });
+                });
+            } catch {
+                document.getElementById("scan-status").innerText = "Invalid QR code format.";
+            }
+        }
+
+        qrReader.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess)
+            .catch(err => console.error("QR Reader Error:", err));
+    </script>
+</body>
+</html>
