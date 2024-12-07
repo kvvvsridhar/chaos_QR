@@ -11,23 +11,75 @@
             text-align: center;
             margin: 20px;
         }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
         #qr-reader {
-            margin: 0 auto;
+            margin: 20px auto;
             width: 300px;
+            display: none; /* Initially hidden */
         }
         .status {
             margin: 20px 0;
+        }
+        #start-scan-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        #start-scan-btn:hover {
+            background-color: #0056b3;
+        }
+        #scan-result {
+            display: none;
+            text-align: left;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            width: 300px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
         }
     </style>
 </head>
 <body>
     <h1>QR Code Scanner</h1>
-    <div id="qr-reader"></div>
-    <div class="status">
-        <p id="scan-status">Scanning...</p>
+    <div class="container">
+        <button id="start-scan-btn">Start Scanning</button>
+        <div id="qr-reader"></div>
+        <div class="status">
+            <p id="scan-status">Click "Start Scanning" to begin.</p>
+            <div id="scan-result">
+                <h3>Scan Result</h3>
+                <p id="scan-data"></p>
+            </div>
+        </div>
     </div>
+
     <script>
         const qrReader = new Html5Qrcode("qr-reader");
+
+        // Start scanning on button click
+        document.getElementById("start-scan-btn").addEventListener("click", () => {
+            document.getElementById("qr-reader").style.display = "block";
+            document.getElementById("start-scan-btn").style.display = "none";
+            document.getElementById("scan-status").innerText = "Scanning...";
+            document.getElementById("scan-result").style.display = "none";
+
+            qrReader.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess)
+                .catch(err => {
+                    document.getElementById("scan-status").innerText = `Error initializing scanner: ${err}`;
+                });
+        });
 
         function fetchLocation(callback) {
             if (navigator.geolocation) {
@@ -51,6 +103,16 @@
                     qrData.last_scan_time = timestamp;
                     qrData.last_scan_location = location;
 
+                    // Display the scanned data
+                    document.getElementById("scan-data").innerText = `
+                        ID Number: ${qrData.id_number || "N/A"}
+                        Name: ${qrData.name || "N/A"}
+                        Age: ${qrData.age || "N/A"}
+                        Last Scan Time: ${qrData.last_scan_time}
+                        Last Scan Location: ${qrData.last_scan_location}
+                    `;
+                    document.getElementById("scan-result").style.display = "block";
+
                     // Send QR data to Rails backend
                     fetch('/users/update_from_qr', {
                         method: 'POST',
@@ -70,10 +132,15 @@
             } catch {
                 document.getElementById("scan-status").innerText = "Invalid QR code format.";
             }
-        }
 
-        qrReader.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess)
-            .catch(err => console.error("QR Reader Error:", err));
+            // Stop the scanner and re-enable the button
+            qrReader.stop().then(() => {
+                document.getElementById("qr-reader").style.display = "none";
+                document.getElementById("start-scan-btn").style.display = "block";
+            }).catch(err => {
+                console.error("Error stopping scanner:", err);
+            });
+        }
     </script>
 </body>
 </html>

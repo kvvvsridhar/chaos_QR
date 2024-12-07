@@ -1,0 +1,24 @@
+<h1>Users List</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Age</th>
+      <th>ID Number</th>
+      <th>Last Scan Time</th>
+      <th>Last Scan Location</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @users.each do |user| %>
+      <tr>
+        <td><%= user.name %></td>
+        <td><%= user.age %></td>
+        <td><%= user.id_number %></td>
+        <td><%= user.last_scan_time || "Not scanned yet" %></td>
+        <td><%= user.last_scan_location || "Not scanned yet" %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
