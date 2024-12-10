@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generate QR Code</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+    form {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    input[type="text"] {
+      padding: 10px;
+      margin: 10px 0;
+      width: 300px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .user-list {
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin: 10px 0;
+      padding: 5px;
+      display: none;
+      text-align: left;
+    }
+    .user-list-item {
+      padding: 5px;
+      cursor: pointer;
+    }
+    .user-list-item:hover {
+      background-color: #f1f1f1;
+    }
+    button {
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #007BFF;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .selected-user {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #e9f5ff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Generate QR Code</h1>
+  <form action="<%= generate_qr_code_path %>" method="post">
+    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+    <label for="search">Search User:</label>
+    <input type="text" id="search" placeholder="Type to search users..." onkeyup="filterUsers()">
+    <div id="user-list" class="user-list"></div>
+    <div id="selected-user" class="selected-user" style="display: none;"></div>
+    <input type="hidden" name="user_id" id="selected-user-id">
+    <button type="submit" disabled id="generate-qr-btn">Generate QR Code</button>
+  </form>
+
+  <script>
+    const users = <%= @users.to_json.html_safe %>; // Pass the users data from Rails to JavaScript
+
+    function filterUsers() {
+      const query = document.getElementById('search').value.toLowerCase();
+      const userList = document.getElementById('user-list');
+      const selectedUserDiv = document.getElementById('selected-user');
+      userList.innerHTML = ''; // Clear previous results
+
+      if (query.length === 0) {
+        userList.style.display = 'none';
+        selectedUserDiv.style.display = 'none';
+        return;
+      }
+
+      const filteredUsers = users.filter(user => {
+        return user.name.toLowerCase().includes(query) || user.id_number.toLowerCase().includes(query);
+      });
+
+      if (filteredUsers.length > 0) {
+        userList.style.display = 'block';
+        filteredUsers.forEach(user => {
+          const item = document.createElement('div');
+          item.className = 'user-list-item';
+          item.textContent = `${user.name} (ID: ${user.id_number})`;
+          item.onclick = () => selectUser(user);
+          userList.appendChild(item);
+        });
+      } else {
+        userList.style.display = 'none';
+        selectedUserDiv.style.display = 'none';
+      }
+    }
+
+    function selectUser(user) {
+      document.getElementById('selected-user-id').value = user.id;
+      document.getElementById('generate-qr-btn').disabled = false;
+
+      // Display the selected user information
+      const selectedUserDiv = document.getElementById('selected-user');
+      selectedUserDiv.textContent = `Selected User: ${user.name} (ID: ${user.id_number})`;
+      selectedUserDiv.style.display = 'block';
+
+      // Hide the user list
+      document.getElementById('user-list').style.display = 'none';
+      document.getElementById('search').value = ''; // Clear the search input
+    }
+  </script>
+</body>
+</html>

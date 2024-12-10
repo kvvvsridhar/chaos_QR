@@ -1,7 +1,13 @@
 Rails.application.routes.draw do
-  # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
-  get 'users/scan', to: 'users#scan'
-  post 'users/update_from_qr', to: 'users#update_from_qr'
+  # Root route for the home page
+  root 'home#index'
 
-  resources :users, only: [:index]
+  # Custom routes for scanning and updating users via QR
+  get 'users/scan'
+  post 'users/update_from_qr'
+  get 'users/qr_code_generator', to: 'users#qr_code_generator', as: 'qr_code_generator_users'
+  post 'users/generate_qr_code', to: 'users#generate_qr_code', as: 'generate_qr_code'
+
+  # Resourceful routes for users (index, new, create, update)
+  resources :users, only: [:index, :new, :create, :update]
 end

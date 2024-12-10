@@ -26,7 +26,7 @@
         .status {
             margin: 20px 0;
         }
-        #start-scan-btn {
+        button {
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
@@ -36,7 +36,7 @@
             border-radius: 5px;
             margin-top: 20px;
         }
-        #start-scan-btn:hover {
+        button:hover {
             background-color: #0056b3;
         }
         #scan-result {
@@ -55,6 +55,7 @@
     <h1>QR Code Scanner</h1>
     <div class="container">
         <button id="start-scan-btn">Start Scanning</button>
+        <button id="stop-scan-btn" style="display: none;">Stop Scanning</button>
         <div id="qr-reader"></div>
         <div class="status">
             <p id="scan-status">Click "Start Scanning" to begin.</p>
@@ -67,18 +68,38 @@
 
     <script>
         const qrReader = new Html5Qrcode("qr-reader");
+        let isScanning = false;
 
-        // Start scanning on button click
         document.getElementById("start-scan-btn").addEventListener("click", () => {
             document.getElementById("qr-reader").style.display = "block";
             document.getElementById("start-scan-btn").style.display = "none";
+            document.getElementById("stop-scan-btn").style.display = "inline-block";
             document.getElementById("scan-status").innerText = "Scanning...";
-            document.getElementById("scan-result").style.display = "none";
+            
+            isScanning = true;
 
-            qrReader.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess)
-                .catch(err => {
-                    document.getElementById("scan-status").innerText = `Error initializing scanner: ${err}`;
+            qrReader.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 250 },
+                onScanSuccess
+            ).catch(err => {
+                console.error("QR Reader Error:", err);
+                document.getElementById("scan-status").innerText = `Error: ${err.message}`;
+            });
+        });
+
+        document.getElementById("stop-scan-btn").addEventListener("click", () => {
+            if (isScanning) {
+                qrReader.stop().then(() => {
+                    document.getElementById("qr-reader").style.display = "none";
+                    document.getElementById("start-scan-btn").style.display = "inline-block";
+                    document.getElementById("stop-scan-btn").style.display = "none";
+                    document.getElementById("scan-status").innerText = "Scanning stopped.";
+                }).catch(err => {
+                    console.error("Error stopping the QR scanner:", err);
                 });
+                isScanning = false;
+            }
         });
 
         function fetchLocation(callback) {
@@ -95,50 +116,35 @@
         }
 
         function onScanSuccess(decodedText) {
-            try {
-                const qrData = JSON.parse(decodedText); // Ensure QR code contains valid JSON
+            if (!isScanning) return; // Prevent processing if scanning has been stopped
 
-                fetchLocation((location) => {
-                    const timestamp = new Date().toISOString();
-                    qrData.last_scan_time = timestamp;
-                    qrData.last_scan_location = location;
+            const idNumber = decodedText.trim(); // Expecting only id_number
 
-                    // Display the scanned data
-                    document.getElementById("scan-data").innerText = `
-                        ID Number: ${qrData.id_number || "N/A"}
-                        Name: ${qrData.name || "N/A"}
-                        Age: ${qrData.age || "N/A"}
-                        Last Scan Time: ${qrData.last_scan_time}
-                        Last Scan Location: ${qrData.last_scan_location}
-                    `;
-                    document.getElementById("scan-result").style.display = "block";
-
-                    // Send QR data to Rails backend
-                    fetch('/users/update_from_qr', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ qr_data: qrData })
-                    }).then(response => response.json())
-                      .then(data => {
-                          if (data.success) {
-                              document.getElementById("scan-status").innerText = "Scan successful! User data updated.";
-                          } else {
-                              document.getElementById("scan-status").innerText = `Error: ${data.message}`;
-                          }
-                      }).catch(error => {
-                          document.getElementById("scan-status").innerText = `Error: ${error.message}`;
-                      });
-                });
-            } catch {
-                document.getElementById("scan-status").innerText = "Invalid QR code format.";
+            if (!idNumber) {
+                document.getElementById("scan-status").innerText = "Invalid QR code.";
+                return;
             }
 
-            // Stop the scanner and re-enable the button
-            qrReader.stop().then(() => {
-                document.getElementById("qr-reader").style.display = "none";
-                document.getElementById("start-scan-btn").style.display = "block";
-            }).catch(err => {
-                console.error("Error stopping scanner:", err);
+            fetchLocation((location) => {
+                // Send the id_number and location to Rails backend
+                fetch('/users/update_from_qr', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ qr_data: idNumber, location: location })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById("scan-status").innerText = "Scan successful! User data updated.";
+                        document.getElementById("scan-data").innerText = idNumber;
+                        document.getElementById("scan-result").style.display = "block";
+                    } else {
+                        document.getElementById("scan-status").innerText = `Error: ${data.message}`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById("scan-status").innerText = `Error: ${error.message}`;
+                });
             });
         }
     </script>

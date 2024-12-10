@@ -33,6 +33,9 @@ gem 'jbuilder', '~> 2.5'
 gem 'bigdecimal'
 gem 'mutex_m'
 
+gem 'rqrcode'
+gem 'chunky_png'
+
 # Use Capistrano for deployment
 # gem 'capistrano-rails', group: :development
 
