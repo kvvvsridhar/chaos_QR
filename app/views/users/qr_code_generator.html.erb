@@ -68,6 +68,7 @@
 </head>
 <body>
   <h1>Generate QR Code</h1>
+  <p><%= link_to 'Home', root_path, class: 'home-link' %></p>
   <form action="<%= generate_qr_code_path %>" method="post">
     <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
     <label for="search">Search User:</label>
