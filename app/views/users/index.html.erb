@@ -1,5 +1,7 @@
 <h1>Users List</h1>
 
+<%= link_to 'Generate QR Codes for All Users', generate_qr_codes_for_all_users_path, method: :post, class: 'button' %>
+
 <table>
   <thead>
     <tr>
@@ -8,6 +10,7 @@
       <th>ID Number</th>
       <th>Last Scan Time</th>
       <th>Last Scan Location</th>
+      <th>QR Code</th>
     </tr>
   </thead>
   <tbody>
@@ -18,6 +21,13 @@
         <td><%= user.id_number %></td>
         <td><%= user.last_scan_time || "Not scanned yet" %></td>
         <td><%= user.last_scan_location || "Not scanned yet" %></td>
+        <td>
+          <% if user.qr_code.present? %>
+            <%= image_tag "/qr_codes/#{user.id_number}_qr.png", alt: "QR Code for #{user.name}", width: 100, height: 100 %>
+          <% else %>
+            No QR Code
+          <% end %>
+        </td>
       </tr>
     <% end %>
   </tbody>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_12_07_033125) do
+ActiveRecord::Schema[7.0].define(version: 2024_12_30_103337) do
   create_table "users", force: :cascade do |t|
     t.string "name"
     t.string "id_number"
@@ -20,6 +20,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_12_07_033125) do
     t.datetime "updated_at", null: false
     t.datetime "last_scan_time"
     t.string "last_scan_location"
+    t.string "qr_code"
   end
 
 end

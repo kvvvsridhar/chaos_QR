@@ -10,4 +10,9 @@ Rails.application.routes.draw do
 
   # Resourceful routes for users (index, new, create, update)
   resources :users, only: [:index, :new, :create, :update]
+  resources :users do
+    collection do
+      post :generate_qr_codes_for_all
+    end
+  end
 end

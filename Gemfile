@@ -35,6 +35,9 @@ gem 'mutex_m'
 
 gem 'rqrcode'
 gem 'chunky_png'
+gem 'write_xlsx'
+gem 'byebug'
+gem 'roo'
 
 # Use Capistrano for deployment
 # gem 'capistrano-rails', group: :development
