@@ -23,8 +23,8 @@
         <td><%= user.age %></td>
         <td><%= user.id_number %></td>
         <td><%= user.last_scan_time || "Not scanned yet" %></td>
-        <td><%= user.exit_time || "Not scanned yet" %></td>
         <td><%= user.last_scan_location || "Not scanned yet" %></td>
+        <td><%= user.exit_time || "Not scanned yet" %></td>
         <td><%= user.exit_location || "Not scanned yet" %></td>
         <td>
           <% if user.qr_code.present? %>
