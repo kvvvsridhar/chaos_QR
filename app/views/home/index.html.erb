@@ -32,6 +32,25 @@
         .nav-button:hover {
             background-color: #0056b3;
         }
+        .scan-buttons {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 20px;
+        }
+        .scan-button {
+            padding: 15px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .scan-button:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
@@ -39,8 +58,11 @@
     <div class="button-container">
         <a href="/users/new" class="nav-button">Create New User</a>
         <a href="/users" class="nav-button">View User List</a>
-        <a href="/users/scan" class="nav-button">Scan QR Code</a>
-        <a href="<%= qr_code_generator_users_path %>" class="nav-button">Generate QR Code</a>
+        <a href="<%= qr_code_generator_users_path %>" class="nav-button">Generate QR Codes</a>
+        <div class="scan-buttons">
+            <a href="/users/scan?scan_type=entry" class="scan-button">Entry Scan</a>
+            <a href="/users/scan?scan_type=exit" class="scan-button">Exit Scan</a>
+        </div>
     </div>
 </body>
 </html>

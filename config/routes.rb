@@ -13,6 +13,8 @@ Rails.application.routes.draw do
   resources :users do
     collection do
       post :generate_qr_codes_for_all
+      post :update_from_qr
+      post :update_exit_from_qr
     end
   end
 end

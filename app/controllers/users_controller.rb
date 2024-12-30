@@ -18,6 +18,53 @@ class UsersController < ApplicationController
         render :new
       end
     end
+
+    def update_from_qr
+        begin
+          qr_data = JSON.parse(params[:qr_data])
+          id_number = qr_data["id_number"]
+          
+          user = User.find_by(id_number: id_number)
+          
+          if user
+            user.update(
+              last_scan_time: Time.current,
+              last_scan_location: params[:location]
+            )
+            render json: { success: true, message: "Entry scan updated successfully." }, status: :ok
+          else
+            render json: { success: false, message: "User not found." }, status: :not_found
+          end
+        rescue JSON::ParserError
+          render json: { success: false, message: "Invalid QR data." }, status: :unprocessable_entity
+        rescue StandardError => e
+          render json: { success: false, message: e.message }, status: :internal_server_error
+        end
+      end
+    
+      # Exit Scan (new method)
+      def update_exit_from_qr
+        begin
+          qr_data = JSON.parse(params[:qr_data])
+          id_number = qr_data["id_number"]
+          
+          user = User.find_by(id_number: id_number)
+          
+          if user
+            user.update(
+              exit_time: Time.current,
+              exit_location: params[:location]
+            )
+            render json: { success: true, message: "Exit scan updated successfully." }, status: :ok
+          else
+            render json: { success: false, message: "User not found." }, status: :not_found
+          end
+        rescue JSON::ParserError
+          render json: { success: false, message: "Invalid QR data." }, status: :unprocessable_entity
+        rescue StandardError => e
+          render json: { success: false, message: e.message }, status: :internal_server_error
+        end
+      end
   
     def qr_code_generator
       @users = User.all

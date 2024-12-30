@@ -54,6 +54,7 @@
 <body>
     <h1>QR Code Scanner</h1>
     <div class="container">
+        <h2 id="scan-type-heading"></h2>
         <button id="start-scan-btn">Start Scanning</button>
         <button id="stop-scan-btn" style="display: none;">Stop Scanning</button>
         <div id="qr-reader"></div>
@@ -70,12 +71,20 @@
         const qrReader = new Html5Qrcode("qr-reader");
         let isScanning = false;
 
+        // Determine the scan type (entry or exit) based on query params
+        const urlParams = new URLSearchParams(window.location.search);
+        const scanType = urlParams.get("scan_type"); // Values: "entry" or "exit"
+
+        // Update heading based on scan type
+        const scanTypeHeading = document.getElementById("scan-type-heading");
+        scanTypeHeading.innerText = scanType === "exit" ? "Exit Scan" : "Entry Scan";
+
         document.getElementById("start-scan-btn").addEventListener("click", () => {
             document.getElementById("qr-reader").style.display = "block";
             document.getElementById("start-scan-btn").style.display = "none";
             document.getElementById("stop-scan-btn").style.display = "inline-block";
             document.getElementById("scan-status").innerText = "Scanning...";
-            
+
             isScanning = true;
 
             qrReader.start(
@@ -126,8 +135,11 @@
             }
 
             fetchLocation((location) => {
+                // Determine endpoint based on scan type
+                const endpoint = scanType === "exit" ? '/users/update_exit_from_qr' : '/users/update_from_qr';
+
                 // Send the id_number and location to Rails backend
-                fetch('/users/update_from_qr', {
+                fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ qr_data: idNumber, location: location })
@@ -135,7 +147,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        document.getElementById("scan-status").innerText = "Scan successful! User data updated.";
+                        document.getElementById("scan-status").innerText = `${scanType === "exit" ? "Exit" : "Entry"} scan successful! User data updated.`;
                         document.getElementById("scan-data").innerText = idNumber;
                         document.getElementById("scan-result").style.display = "block";
                     } else {
